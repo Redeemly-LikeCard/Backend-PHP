@@ -3,7 +3,7 @@
   "description": "Seamlessly integrate Redeemly LuckyCode rewards into any PHP application",
   "type": "library",
   "license": "MIT",
-  "version": "2.2.0",
+  "version": "2.2.3",
   "require": {
     "php": ">=8.2",
     "guzzlehttp/guzzle": "^7.9"
