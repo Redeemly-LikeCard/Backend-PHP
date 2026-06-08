@@ -1,21 +1,35 @@
 {
   "name": "redeemly-likecard/luckycode-package",
-"description": "Seamlessly integrate Redeemly LuckyCode rewards into any PHP application. This framework-agnostic PHP client provides full API coverage (pull, reveal, redeem, customer logs) with dedicated service providers and facades for Laravel, and straightforward integration for CodeIgniter and other PHP frameworks.",
+  "description": "Seamlessly integrate Redeemly LuckyCode rewards into any PHP application",
+  "type": "library",
   "license": "MIT",
+  "version": "2.2.0",
   "require": {
     "php": ">=8.2",
-    "guzzlehttp/guzzle": "^7.9",
-    "illuminate/support": "^11.0|^12.0",
-    "illuminate/contracts": "^11.0|^12.0",
-    "illuminate/routing": "^11.0|^12.0",
-    "illuminate/config": "^11.0|^12.0"
+    "guzzlehttp/guzzle": "^7.9"
+  },
+  "require-dev": {
+    "codeigniter4/framework": "^4.7"
   },
   "autoload": {
     "psr-4": {
       "LuckyCode\\IntegrationHelper\\": "src/"
     }
   },
+  "scripts": {
+    "post-install-cmd": [
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
+    ],
+    "post-update-cmd": [
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
+    ]
+  },
   "extra": {
+    "codeigniter": {
+      "commands": [
+        "LuckyCode\\IntegrationHelper\\CodeIgniter\\Commands\\PublishCommand"
+      ]
+    },
     "laravel": {
       "providers": [
         "LuckyCode\\IntegrationHelper\\IntegrationHelperServiceProvider"
@@ -28,9 +42,9 @@
       "url": "..\\"
     }
   },
-"include-path": [
+  "include-path": [
     "config/"
-],
+  ],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
