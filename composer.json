@@ -3,7 +3,7 @@
   "description": "Seamlessly integrate Redeemly LuckyCode rewards into any PHP application",
   "type": "library",
   "license": "MIT",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "require": {
     "php": ">=8.2",
     "guzzlehttp/guzzle": "^7.9"
@@ -13,15 +13,19 @@
   },
   "autoload": {
     "psr-4": {
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\": "src/CodeIgniter/",
       "LuckyCode\\IntegrationHelper\\": "src/"
     }
   },
   "scripts": {
     "post-install-cmd": [
-      "@php -r \"if (class_exists('LuckyCode\\\\IntegrationHelper\\\\CodeIgniter\\\\Installer')) { LuckyCode\\\\IntegrationHelper\\\\CodeIgniter\\\\Installer::postInstall(); }\""
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
     ],
     "post-update-cmd": [
-      "@php -r \"if (class_exists('LuckyCode\\\\IntegrationHelper\\\\CodeIgniter\\\\Installer')) { LuckyCode\\\\IntegrationHelper\\\\CodeIgniter\\\\Installer::postInstall(); }\""
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
+    ],
+    "post-autoload-dump": [
+      "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
     ]
   },
   "extra": {
