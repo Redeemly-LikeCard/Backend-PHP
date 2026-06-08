@@ -2,14 +2,14 @@
 
 namespace LuckyCode\IntegrationHelper\CodeIgniter\Controllers;
 
-use App\Controllers\BaseController;
+use CodeIgniter\Controller;
 use LuckyCode\IntegrationHelper\Services\LuckyCodeService;
 use LuckyCode\IntegrationHelper\Models\PullCodeRequest;
 use LuckyCode\IntegrationHelper\Models\RevealCodeRequest;
 use LuckyCode\IntegrationHelper\Models\RedeemCodeRequest;
 use LuckyCode\IntegrationHelper\Models\CustomerPakageLogQuery;
 
-class BaseLuckyCodeController extends BaseController
+class BaseLuckyCodeController extends Controller
 {
     protected $luckyCodeService;
     

@@ -22,14 +22,12 @@
     ],
     "post-update-cmd": [
       "LuckyCode\\IntegrationHelper\\CodeIgniter\\Installer::postInstall"
+    ],
+    "post-autoload-dump": [
+      "php scripts/post-autoload-dump.php"
     ]
   },
   "extra": {
-    "codeigniter": {
-      "commands": [
-        "LuckyCode\\IntegrationHelper\\CodeIgniter\\Commands\\PublishCommand"
-      ]
-    },
     "laravel": {
       "providers": [
         "LuckyCode\\IntegrationHelper\\IntegrationHelperServiceProvider"
@@ -42,9 +40,6 @@
       "url": "..\\"
     }
   },
-  "include-path": [
-    "config/"
-  ],
   "minimum-stability": "dev",
   "prefer-stable": true
 }
