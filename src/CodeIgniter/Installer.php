@@ -6,47 +6,59 @@ class Installer
 {
     public static function postInstall()
     {
-        $projectRoot = self::getProjectRoot();
+        echo "\n[LuckyCode] Running installer...\n";
         
-        // Skip Laravel projects (critical!)
-        if (file_exists($projectRoot . 'artisan') || 
-            file_exists($projectRoot . 'bootstrap' . DIRECTORY_SEPARATOR . 'app.php')) {
+        $projectRoot = self::findProjectRoot();
+        
+        if (!$projectRoot) {
+            echo "[LuckyCode] Not in a CodeIgniter project, skipping.\n";
             return;
         }
         
-        // Only run for CodeIgniter projects
-        if (!file_exists($projectRoot . 'spark') && 
-            !file_exists($projectRoot . 'app' . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Routes.php')) {
+        // Skip Laravel
+        if (file_exists($projectRoot . '/artisan')) {
+            echo "[LuckyCode] Laravel project detected, skipping CI4 installer.\n";
             return;
         }
         
-        echo "\n\033[32m==============================================\033[0m\n";
-        echo "\033[32mLuckyCode Package - Installing for CodeIgniter 4\033[0m\n";
-        echo "\033[32m==============================================\033[0m\n\n";
+        echo "[LuckyCode] Installing for CodeIgniter 4...\n";
         
-        self::publishConfig($projectRoot);
-        self::publishController($projectRoot);
+        self::createConfig($projectRoot);
+        self::createController($projectRoot);
         self::addRoutes($projectRoot);
-        self::publishEnv($projectRoot);
+        self::addEnvVars($projectRoot);
         
-        echo "\n\033[32m✓ LuckyCode Package is READY TO USE!\033[0m\n";
-        echo "\n\033[33mNext steps:\033[0m\n";
-        echo "1. Add your API credentials to .env file\n";
-        echo "2. Run: php spark serve\n";
-        echo "3. API endpoints ready at: http://localhost:8080/luckycode/*\n";
-        echo "\n\033[32m==============================================\033[0m\n\n";
+        echo "\n✅ LuckyCode Package v2.3.0 installed successfully!\n";
+        echo "   API endpoints available at: /luckycode/*\n\n";
     }
     
-    private static function publishConfig(string $projectRoot)
+    private static function findProjectRoot()
     {
-        $target = $projectRoot . 'app' . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'LuckyCode.php';
+        $paths = [
+            getcwd(),
+            dirname(getcwd()),
+            dirname(dirname(getcwd())),
+        ];
         
-        if (file_exists($target)) {
+        foreach ($paths as $path) {
+            if (file_exists($path . '/app/Config/Paths.php') && 
+                file_exists($path . '/public/index.php')) {
+                return $path;
+            }
+        }
+        
+        return null;
+    }
+    
+    private static function createConfig($root)
+    {
+        $file = $root . '/app/Config/LuckyCode.php';
+        if (file_exists($file)) {
             echo "  • Config already exists\n";
             return;
         }
         
-        $configTemplate = '<?php
+        $content = '<?php
 
 namespace Config;
 
@@ -70,20 +82,19 @@ class LuckyCode extends BaseConfig
     }
 }
 ';
-        file_put_contents($target, $configTemplate);
+        file_put_contents($file, $content);
         echo "  ✓ Created: app/Config/LuckyCode.php\n";
     }
     
-    private static function publishController(string $projectRoot)
+    private static function createController($root)
     {
-        $target = $projectRoot . 'app' . DIRECTORY_SEPARATOR . 'Controllers' . DIRECTORY_SEPARATOR . 'LuckyCodeController.php';
-        
-        if (file_exists($target)) {
+        $file = $root . '/app/Controllers/LuckyCodeController.php';
+        if (file_exists($file)) {
             echo "  • Controller already exists\n";
             return;
         }
         
-        $controllerTemplate = '<?php
+        $content = '<?php
 
 namespace App\Controllers;
 
@@ -137,10 +148,7 @@ class LuckyCodeController extends BaseController
     
     public function checkSerialCode()
     {
-        $serialCode = $this->request->getGet("serialCode") 
-                    ?? $this->request->getGet("serialcode")
-                    ?? "";
-        
+        $serialCode = $this->request->getGet("serialCode") ?? $this->request->getGet("serialcode") ?? "";
         return $this->response->setJSON($this->luckyCodeService->checkSerialCode($serialCode));
     }
     
@@ -151,7 +159,6 @@ class LuckyCodeController extends BaseController
             "pageSize" => $this->request->getGet("pageSize") ?? 30,
             "customerRef" => $this->request->getGet("customerRef") ?? ""
         ]);
-        
         return $this->response->setJSON($this->luckyCodeService->getCustomersLog($query));
     }
     
@@ -165,20 +172,14 @@ class LuckyCodeController extends BaseController
     }
 }
 ';
-        file_put_contents($target, $controllerTemplate);
+        file_put_contents($file, $content);
         echo "  ✓ Created: app/Controllers/LuckyCodeController.php\n";
     }
     
-    private static function addRoutes(string $projectRoot)
+    private static function addRoutes($root)
     {
-        $routesFile = $projectRoot . 'app' . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Routes.php';
-        
-        if (!file_exists($routesFile)) {
-            return;
-        }
-        
-        $routesCode = "\n\n// LuckyCode Routes - Auto-added by package\n";
-        $routesCode .= "\$routes->group('luckycode', function(\$routes) {\n";
+        $file = $root . '/app/Config/Routes.php';
+        $routesCode = "\n\n// LuckyCode Routes\n\$routes->group('luckycode', function(\$routes) {\n";
         $routesCode .= "    \$routes->post('pull', 'LuckyCodeController::pull');\n";
         $routesCode .= "    \$routes->post('reveal', 'LuckyCodeController::reveal');\n";
         $routesCode .= "    \$routes->post('redeem', 'LuckyCodeController::redeem');\n";
@@ -187,65 +188,32 @@ class LuckyCodeController extends BaseController
         $routesCode .= "    \$routes->get('customer-log', 'LuckyCodeController::getCustomersLog');\n";
         $routesCode .= "});\n";
         
-        $content = file_get_contents($routesFile);
-        
+        $content = file_get_contents($file);
         if (strpos($content, 'LuckyCode Routes') === false) {
-            file_put_contents($routesFile, $content . $routesCode);
+            file_put_contents($file, $content . $routesCode);
             echo "  ✓ Added routes to: app/Config/Routes.php\n";
-        } else {
-            echo "  • Routes already exist\n";
         }
     }
     
-    private static function publishEnv(string $projectRoot)
+    private static function addEnvVars($root)
     {
-        $envFile = $projectRoot . '.env';
-        
-        if (!file_exists($envFile)) {
+        $file = $root . '/.env';
+        if (!file_exists($file)) {
             return;
         }
         
-        $envContent = file_get_contents($envFile);
-        $varsToAdd = [];
-        
-        if (strpos($envContent, 'LUCKYCODE_BASE_URL') === false) {
-            $varsToAdd[] = 'LUCKYCODE_BASE_URL=https://your-api.com';
-        }
-        if (strpos($envContent, 'LUCKYCODE_API_KEY') === false) {
-            $varsToAdd[] = 'LUCKYCODE_API_KEY=your-api-key';
-        }
-        if (strpos($envContent, 'LUCKYCODE_CLIENT_ID') === false) {
-            $varsToAdd[] = 'LUCKYCODE_CLIENT_ID=your-client-id';
-        }
-        if (strpos($envContent, 'LUCKYCODE_SSL_VERIFY') === false) {
-            $varsToAdd[] = 'LUCKYCODE_SSL_VERIFY=true';
-        }
-        
-        if (!empty($varsToAdd)) {
-            $envContent .= "\n\n# LuckyCode Configuration\n" . implode("\n", $varsToAdd) . "\n";
-            file_put_contents($envFile, $envContent);
-            echo "  ✓ Added environment variables to .env\n";
-        } else {
-            echo "  • Environment variables already exist\n";
-        }
-    }
-    
-    private static function getProjectRoot(): string
-    {
-        // Check common locations
-        $paths = [
-            getcwd(),
-            dirname(getcwd()),
-            dirname(dirname(getcwd())),
-            dirname(dirname(dirname(getcwd())))
+        $content = file_get_contents($file);
+        $vars = [
+            "\n# LuckyCode Configuration",
+            "LUCKYCODE_BASE_URL=https://your-api.com",
+            "LUCKYCODE_API_KEY=your-api-key",
+            "LUCKYCODE_CLIENT_ID=your-client-id",
+            "LUCKYCODE_SSL_VERIFY=true"
         ];
         
-        foreach ($paths as $path) {
-            if (file_exists($path . DIRECTORY_SEPARATOR . 'app' . DIRECTORY_SEPARATOR . 'Config' . DIRECTORY_SEPARATOR . 'Paths.php')) {
-                return rtrim($path, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
-            }
+        if (strpos($content, 'LUCKYCODE_BASE_URL') === false) {
+            file_put_contents($file, $content . "\n" . implode("\n", $vars) . "\n");
+            echo "  ✓ Added environment variables to .env\n";
         }
-        
-        return rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
     }
 }
