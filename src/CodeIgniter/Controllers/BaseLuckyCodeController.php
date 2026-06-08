@@ -15,7 +15,7 @@ class BaseLuckyCodeController extends Controller
     
     public function __construct()
     {
-        parent::__construct();
+       // parent::__construct();
 
         $this->luckyCodeService = new LuckyCodeService(
             baseUrl: env('LUCKYCODE_BASE_URL') ?: '',
